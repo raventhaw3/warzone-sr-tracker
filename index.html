@@ -194,12 +194,12 @@ button:hover {
 <script>
 // --- Firebase Config ---
 const firebaseConfig = {
-  apiKey: "AIzaSyDoxF823Ik1kW92fc4o5jUN8x6fWXlTJNg",
-  authDomain: "warzone-46afd.firebaseapp.com",
-  projectId: "warzone-46afd",
-  storageBucket: "warzone-46afd.firebasestorage.app",
-  messagingSenderId: "678583817891",
-  appId: "1:678583817891:web:640c1bfd4e50414169d116"
+  apiKey: "AIzaSyBMbgDXCOBAnzWNsc_x67cdkMrJFC1xtGA",
+  authDomain: "warzonesrtracker.firebaseapp.com",
+  projectId: "warzonesrtracker",
+  storageBucket: "warzonesrtracker.firebasestorage.app",
+  messagingSenderId: "1025872094731",
+  appId: "1:1025872094731:web:d119fc41d72fe6192fc90e"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -236,26 +236,38 @@ const winRateCounter = new countUp.CountUp('winRateCounter',0,{duration:1,suffix
 
 // --- Auth ---
 const authForm = document.getElementById('authForm');
-authForm.addEventListener('submit', async e=>{
+authForm.addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(email,password)
-      .catch(async err=>{
-        if(err.code==='auth/user-not-found'){
-          await auth.createUserWithEmailAndPassword(email,password);
-        } else {throw err;}
-      });
-    authForm.style.display='none';
-    document.getElementById('profileForm').style.display='flex';
-    document.getElementById('addMatchForm').style.display='flex';
-    document.querySelector('.stats').style.display='flex';
-    document.querySelector('.rank-bar-container').style.display='block';
-    document.querySelector('.rank-overlay').style.display='flex';
-    loadPlayer();
-  } catch(err){ alert(err.message); }
+    await auth.signInWithEmailAndPassword(email, password);
+    showAppUI();
+  } catch (err) {
+    if (err.code === 'auth/user-not-found') {
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        showAppUI();
+      } catch (createErr) {
+        alert('Error creating user: ' + createErr.message);
+      }
+    } else {
+      alert('Login error: ' + err.message);
+    }
+  }
 });
+
+// Show app UI after login
+function showAppUI() {
+  authForm.style.display = 'none';
+  document.getElementById('profileForm').style.display = 'flex';
+  document.getElementById('addMatchForm').style.display = 'flex';
+  document.querySelector('.stats').style.display = 'flex';
+  document.querySelector('.rank-bar-container').style.display = 'block';
+  document.querySelector('.rank-overlay').style.display = 'flex';
+  loadPlayer();
+}
 
 // --- Firestore ---
 function savePlayer(){
