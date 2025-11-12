@@ -194,7 +194,7 @@ button:hover {
 <script>
 // --- Firebase Config ---
 const firebaseConfig = {
-  apiKey: "AIzaSyA3WHvUxhFj6h2uPi-n9WUhGfk-YxMk8Cc",
+  apiKey: "AIzaSyBMbgDXCOBAnzWNsc_x67cdkMrJFC1xtGA",
   authDomain: "warzonesrtracker.firebaseapp.com",
   projectId: "warzonesrtracker",
   storageBucket: "warzonesrtracker.firebasestorage.app",
@@ -225,7 +225,7 @@ tsParticles.load("tsparticles", {
   detectRetina:true
 });
 
-// --- Ranks & Player ---
+// --- Ranks ---
 const ranks = ['Bronze 1','Bronze 2','Bronze 3','Silver 1','Silver 2','Silver 3','Gold 1','Gold 2','Gold 3','Platinum 1','Platinum 2','Platinum 3','Diamond 1','Diamond 2','Diamond 3','Iridescent','Top 250'];
 const rankColors = {'Bronze 1':'#b87333','Bronze 2':'#b87333','Bronze 3':'#b87333','Silver 1':'#c0c0c0','Silver 2':'#c0c0c0','Silver 3':'#c0c0c0','Gold 1':'#ffd700','Gold 2':'#ffd700','Gold 3':'#ffd700','Platinum 1':'#00ffff','Platinum 2':'#00ffff','Platinum 3':'#00ffff','Diamond 1':'#1e90ff','Diamond 2':'#1e90ff','Diamond 3':'#1e90ff','Iridescent':'#ff00ff','Top 250':'#ff0000'};
 
@@ -234,37 +234,55 @@ const srCounter = new countUp.CountUp('srCounter',0,{duration:1});
 const kdCounter = new countUp.CountUp('kdCounter',0,{duration:1,decimalPlaces:2});
 const winRateCounter = new countUp.CountUp('winRateCounter',0,{duration:1,suffix:'%',decimalPlaces:1});
 
-// --- Auth & Firestore functions ---
+// --- Auth ---
 const authForm = document.getElementById('authForm');
-authForm.addEventListener('submit', async e=>{
+authForm.addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(email,password)
-      .catch(async err=>{
-        if(err.code==='auth/user-not-found'){
-          await auth.createUserWithEmailAndPassword(email,password);
-        } else {throw err;}
-      });
-    authForm.style.display='none';
-    document.getElementById('profileForm').style.display='flex';
-    document.getElementById('addMatchForm').style.display='flex';
-    document.querySelector('.stats').style.display='flex';
-    document.querySelector('.rank-bar-container').style.display='block';
-    document.querySelector('.rank-overlay').style.display='flex';
-    loadPlayer();
-  } catch(err){ alert(err.message); }
+    await auth.signInWithEmailAndPassword(email, password);
+    showAppUI();
+  } catch (err) {
+    if (err.code === 'auth/user-not-found') {
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        showAppUI();
+      } catch (createErr) {
+        alert('Error creating user: ' + createErr.message);
+      }
+    } else {
+      alert('Login error: ' + err.message);
+    }
+  }
 });
 
-function savePlayer(){ db.collection('players').doc(auth.currentUser.uid).set(player); }
+// Show app UI after login
+function showAppUI() {
+  authForm.style.display = 'none';
+  document.getElementById('profileForm').style.display = 'flex';
+  document.getElementById('addMatchForm').style.display = 'flex';
+  document.querySelector('.stats').style.display = 'flex';
+  document.querySelector('.rank-bar-container').style.display = 'block';
+  document.querySelector('.rank-overlay').style.display = 'flex';
+  loadPlayer();
+}
+
+// --- Firestore ---
+function savePlayer(){
+  const uid = auth.currentUser.uid;
+  db.collection('players').doc(uid).set(player);
+}
 async function loadPlayer(){
-  const doc = await db.collection('players').doc(auth.currentUser.uid).get();
+  const uid = auth.currentUser.uid;
+  const doc = await db.collection('players').doc(uid).get();
   if(doc.exists) player = doc.data();
   updateUI();
 }
 function resetPlayer(){
-  db.collection('players').doc(auth.currentUser.uid).delete();
+  const uid = auth.currentUser.uid;
+  db.collection('players').doc(uid).delete();
   player={gamertag:'',sr:0,wins:0,matches:0,kills:0,deaths:0};
   updateUI();
 }
@@ -333,4 +351,3 @@ document.getElementById('addMatchForm').addEventListener('submit',e=>{
 </script>
 </body>
 </html>
-
